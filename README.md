@@ -66,7 +66,7 @@ src/
 │   └── ui/              # Componentes shadcn-vue (gerados via CLI)
 ├── composables/         # Composables Vue reutilizáveis
 ├── lib/
-│   └── utils.ts         # Utilitário cn() (clsx + tailwind-merge)
+│   └── utils.ts         # Utilitários: cn() (clsx + tailwind-merge), triggerFileDownload()
 ├── router/
 │   └── index.ts         # Definição de rotas
 ├── schemas/
@@ -77,6 +77,8 @@ src/
 ├── stores/              # Stores Pinia
 ├── styles.css           # CSS global (variáveis shadcn-vue + TailwindCSS)
 ├── views/               # Componentes de página (mapeados pelo router)
+│   ├── tasks/           # TasksView, TaskDetailView
+│   └── submissions/     # SubmissionDetailView
 ├── App.vue              # Componente raiz
 └── main.ts              # Bootstrap da aplicação
 ```
