@@ -26,6 +26,11 @@ const router = createRouter({
           component: () => import('@/views/AboutView.vue'),
         },
         {
+          path: 'classes',
+          name: 'classes',
+          component: () => import('@/views/classes/ClassesView.vue'),
+        },
+        {
           path: 'users',
           name: 'users',
           component: () => import('@/views/users/UsersView.vue'),
@@ -34,6 +39,16 @@ const router = createRouter({
           path: 'change-password',
           name: 'change-password',
           component: () => import('@/views/accounts/ChangePasswordView.vue'),
+        },
+        {
+          path: 'tasks',
+          name: 'tasks',
+          component: () => import('@/views/tasks/TasksView.vue'),
+        },
+        {
+          path: 'tasks/:id',
+          name: 'task-detail',
+          component: () => import('@/views/tasks/TaskDetailView.vue'),
         },
       ],
     },

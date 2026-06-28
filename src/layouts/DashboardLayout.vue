@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router'
-import { GraduationCap, House, Info, KeyRound, LogOut, Users } from '@lucide/vue'
+import { BookOpen, ClipboardList, GraduationCap, House, Info, KeyRound, LogOut, Users } from '@lucide/vue'
 import { useAuthStore } from '@/stores/auth.store'
 import {
   Sidebar,
@@ -39,13 +39,20 @@ const authStore = useAuthStore()
 
 const navItems = [
   { name: 'home', label: 'Home', icon: House },
+  { name: 'classes', label: 'Turmas', icon: BookOpen },
+  { name: 'tasks', label: 'Tarefas', icon: ClipboardList },
   { name: 'users', label: 'Usuários', icon: Users },
   { name: 'about', label: 'About', icon: Info },
 ]
 
+const extraLabels: Record<string, string> = {
+  'task-detail': 'Detalhe da Tarefa',
+  'change-password': 'Alterar Senha',
+}
+
 const pageLabel = computed(() => {
   const item = navItems.find((i) => i.name === route.name)
-  return item?.label ?? String(route.name ?? '')
+  return item?.label ?? extraLabels[String(route.name)] ?? String(route.name ?? '')
 })
 
 const userInitials = computed(() => {
