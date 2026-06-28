@@ -67,6 +67,14 @@ async function handleLogin() {
               required
             />
           </div>
+          <div class="text-right">
+            <RouterLink
+              :to="{ name: 'forgot-password' }"
+              class="text-sm text-muted-foreground underline-offset-4 hover:underline hover:text-foreground"
+            >
+              Esqueceu a senha?
+            </RouterLink>
+          </div>
           <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
           <Button type="submit" class="w-full" :disabled="loading">
             {{ loading ? 'Entrando...' : 'Entrar' }}
