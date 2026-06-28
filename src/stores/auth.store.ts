@@ -18,6 +18,12 @@ export const useAuthStore = defineStore('auth', () => {
     await fetchMe()
   }
 
+  async function authenticate(): Promise<void> {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return
+    await fetchMe()
+  }
+
   async function fetchMe(): Promise<void> {
     user.value = await userService.me()
   }
@@ -27,5 +33,5 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
   }
 
-  return { user, isAuthenticated, isAdmin, isTeacher, isStudent, login, fetchMe, logout }
+  return { user, isAuthenticated, isAdmin, isTeacher, isStudent, authenticate, login, fetchMe, logout }
 })
