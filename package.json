@@ -66,6 +66,9 @@
   "pnpm": {
     "approvedBuiltDependencies": [
       "vue-demi"
+    ],
+    "onlyBuiltDependencies": [
+      "vue-demi"
     ]
   }
 }
