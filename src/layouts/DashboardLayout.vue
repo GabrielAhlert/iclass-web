@@ -105,7 +105,12 @@ function handleLogout() {
       <SidebarContent>
         <SidebarMenu>
           <SidebarMenuItem v-for="item in visibleNavItems" :key="item.name">
-            <SidebarMenuButton as-child :is-active="route.name === item.name" :tooltip="item.label">
+            <SidebarMenuButton
+              as-child
+              :is-active="route.name === item.name"
+              :tooltip="item.label"
+              class="group-data-[collapsible=icon]:[&>span:last-child]:hidden group-data-[collapsible=icon]:justify-center"
+            >
               <RouterLink :to="{ name: item.name }">
                 <component :is="item.icon" />
                 <span>{{ item.label }}</span>
