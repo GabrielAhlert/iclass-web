@@ -61,7 +61,13 @@ export const dashboardSchema = z.discriminatedUnion('role', [
   adminDashboardSchema,
 ])
 
+export const chartDataSchema = z.object({
+  submissionsPerMonth: z.array(z.object({ month: z.string(), count: z.number() })),
+  scorePerClass: z.array(z.object({ code: z.string(), avg: z.number() })),
+})
+
 export type DashboardData = z.infer<typeof dashboardSchema>
 export type StudentDashboard = z.infer<typeof studentDashboardSchema>
 export type TeacherDashboard = z.infer<typeof teacherDashboardSchema>
 export type AdminDashboard = z.infer<typeof adminDashboardSchema>
+export type ChartData = z.infer<typeof chartDataSchema>

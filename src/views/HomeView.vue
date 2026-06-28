@@ -14,7 +14,9 @@ import {
 } from '@lucide/vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { dashboardService } from '@/services/dashboard'
-import type { DashboardData } from '@/schemas/dashboard.schema'
+import { submissionService } from '@/services/submission'
+import type { ChartData, DashboardData } from '@/schemas/dashboard.schema'
+import type { Submission } from '@/schemas/submission.schema'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -25,22 +27,87 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import BarChart from '@/components/ui/chart/BarChart.vue'
+import LineChart from '@/components/ui/chart/LineChart.vue'
 
 const authStore = useAuthStore()
 
 const data = ref<DashboardData | null>(null)
+const chartData = ref<ChartData | null>(null)
+const mySubmissions = ref<Submission[]>([])
 const loading = ref(false)
 
 const admin = computed(() => (data.value?.role === 'admin' ? data.value : null))
 const teacher = computed(() => (data.value?.role === 'teacher' ? data.value : null))
 const student = computed(() => (data.value?.role === 'student' ? data.value : null))
 
+const PT_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+
+function getLast6MonthKeys(): string[] {
+  const now = new Date()
+  return Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  })
+}
+
+function formatMonthKey(key: string): string {
+  const [year, month] = key.split('-')
+  return `${PT_MONTHS[parseInt(month) - 1]}/${year.slice(2)}`
+}
+
+const last6MonthLabels = computed(() => getLast6MonthKeys().map(formatMonthKey))
+
+const teacherMonthData = computed(() => {
+  const keys = getLast6MonthKeys()
+  const map = Object.fromEntries((chartData.value?.submissionsPerMonth ?? []).map((r) => [r.month, r.count]))
+  return keys.map((k) => map[k] ?? 0)
+})
+
+const teacherClassLabels = computed(() => (chartData.value?.scorePerClass ?? []).map((r) => r.code))
+const teacherClassData = computed(() => (chartData.value?.scorePerClass ?? []).map((r) => r.avg))
+
+const studentBarData = computed(() => {
+  const keys = getLast6MonthKeys()
+  const counts = Object.fromEntries(keys.map((k) => [k, 0]))
+  for (const sub of mySubmissions.value) {
+    const d = new Date(sub.createdAt)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    if (key in counts) counts[key]++
+  }
+  return keys.map((k) => counts[k])
+})
+
+const studentLineData = computed(() => {
+  const keys = getLast6MonthKeys()
+  const grades: Record<string, number[]> = Object.fromEntries(keys.map((k) => [k, []]))
+  for (const sub of mySubmissions.value) {
+    if (sub.grade === null) continue
+    const d = new Date(sub.createdAt)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    if (key in grades) grades[key].push(sub.grade)
+  }
+  return keys.map((k) => {
+    const arr = grades[k]
+    return arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0
+  })
+})
+
 async function loadDashboard() {
   loading.value = true
   try {
-    data.value = await dashboardService.get()
-  } catch {
-    toast.error('Erro ao carregar o dashboard.')
+    const role = authStore.user?.role
+    const [dashboardResult, chartsResult, submissionsResult] = await Promise.allSettled([
+      dashboardService.get(),
+      role === 'teacher' || role === 'admin' ? dashboardService.getCharts() : Promise.resolve(null),
+      role === 'student' ? submissionService.getMine() : Promise.resolve([]),
+    ])
+
+    if (dashboardResult.status === 'fulfilled') data.value = dashboardResult.value
+    else toast.error('Erro ao carregar o dashboard.')
+
+    if (chartsResult.status === 'fulfilled' && chartsResult.value) chartData.value = chartsResult.value
+    if (submissionsResult.status === 'fulfilled') mySubmissions.value = submissionsResult.value as Submission[]
   } finally {
     loading.value = false
   }
@@ -144,6 +211,21 @@ onMounted(loadDashboard)
           </CardContent>
         </Card>
       </div>
+
+      <div v-if="chartData" class="grid gap-4 lg:grid-cols-2">
+        <BarChart
+          title="Submissões por Mês"
+          label="Submissões"
+          :labels="last6MonthLabels"
+          :data="teacherMonthData"
+        />
+        <BarChart
+          title="Nota Média por Turma"
+          label="Nota média"
+          :labels="teacherClassLabels"
+          :data="teacherClassData"
+        />
+      </div>
     </template>
 
     <!-- Teacher -->
@@ -215,6 +297,21 @@ onMounted(loadDashboard)
             </TableRow>
           </TableBody>
         </Table>
+      </div>
+
+      <div v-if="chartData" class="grid gap-4 lg:grid-cols-2">
+        <BarChart
+          title="Submissões por Mês"
+          label="Submissões"
+          :labels="last6MonthLabels"
+          :data="teacherMonthData"
+        />
+        <BarChart
+          title="Nota Média por Turma"
+          label="Nota média"
+          :labels="teacherClassLabels"
+          :data="teacherClassData"
+        />
       </div>
     </template>
 
@@ -291,6 +388,21 @@ onMounted(loadDashboard)
           </div>
         </CardContent>
       </Card>
+
+      <div class="grid gap-4 lg:grid-cols-2">
+        <BarChart
+          title="Entregas por Mês"
+          label="Entregas"
+          :labels="last6MonthLabels"
+          :data="studentBarData"
+        />
+        <LineChart
+          title="Nota Média por Mês"
+          label="Nota média"
+          :labels="last6MonthLabels"
+          :data="studentLineData"
+        />
+      </div>
     </template>
   </div>
 </template>
